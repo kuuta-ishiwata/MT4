@@ -40,3 +40,6 @@ Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle);
 
 // Quaternionの数値表示
 void QuaternionScreenPrintf(int x, int y, const Quaternion& quaternion, const char* label);
+
+// 球面線形補間
+Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t);
