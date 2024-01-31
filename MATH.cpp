@@ -4,6 +4,7 @@
 #include <cmath>
 #include "math.h"
 
+
 // 加算
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result;
@@ -106,6 +107,24 @@ Vector3 Normalize(const Vector3& v) {
 	return result;
 }
 
+Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
+	Vector3 result;
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] +
+	           1.0f * matrix.m[3][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] +
+	           1.0f * matrix.m[3][1];
+	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] +
+	           1.0f * matrix.m[3][2];
+
+	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] +
+	          1.0f * matrix.m[3][3];
+	result.x /= w;
+	result.y /= w;
+	result.z /= w;
+
+	return result;
+}
+
 // 内積
 float Dot(const Vector3& v1, const Vector3& v2) {
 	float result;
@@ -155,6 +174,49 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 	return result;
 }
 
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+	// 正規化
+	Vector3 n;
+	// 真逆のベクトルかをチェック
+	float dotFrom2to = Dot(from, to);
+	// 正規化
+	n = Normalize(Cross(from, to));
+
+	// 真逆なら反転
+	if (dotFrom2to == -1) {
+		n = {n.y, -n.x, 0};
+	}
+
+	float cos = Dot(from, to);
+	float sin = Length(Cross(from, to));
+
+	Matrix4x4 result = {
+	    n.x * n.x * (1 - cos) + cos,
+	    n.x * n.y * (1 - cos) + n.z * sin,
+	    n.x * n.z * (1 - cos) - n.y * sin,
+	    0,
+	    n.x * n.y * (1 - cos) - n.z * sin,
+	    n.y * n.y * (1 - cos) + cos,
+	    n.y * n.z * (1 - cos) + n.x * sin,
+	    0,
+	    n.x * n.z * (1 - cos) + n.y * sin,
+	    n.y * n.z * (1 - cos) - n.x * sin,
+	    n.z * n.z * (1 - cos) + cos,
+	    0,
+	    0,
+	    0,
+	    0,
+	    1};
+	return result;
+}
+
+void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* label) {
+	Novice::ScreenPrintf(x, y, "%.02f", vector.x);
+	Novice::ScreenPrintf(x + kColumnWidth, y, "%.02f", vector.y);
+	Novice::ScreenPrintf(x + kColumnWidth * 2, y, "%.02f", vector.z);
+	Novice::ScreenPrintf(x + kColumnWidth * 3, y, "%s", label);
+}
+
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label) {
 	Novice::ScreenPrintf(x, y - 20, label);
 	for (int row = 0; row < 4; ++row) {
@@ -162,51 +224,4 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix, const char* label
 			Novice::ScreenPrintf(x + column * 60, y + row * 20, "%6.03f", matrix.m[row][column]);
 		}
 	}
-}
-
-Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
-
-	Vector3 cross = Cross(from, to);
-	float cos = Dot(from, to);
-	float sin = Length(Cross(from, to));
-
-	float epsilon = 1e-6f;
-	Vector3 axis;
-	if (std::abs(cos + 1.0f) <= epsilon) {
-		if (std::abs(from.x) > epsilon || std::abs(from.y) > epsilon) {
-			axis.x = from.y;
-			axis.y = -from.x;
-			axis.z = 0.0f;
-		} else if (std::abs(from.x) > epsilon || std::abs(from.z) > epsilon) {
-			axis.x = from.z;
-			axis.y = 0.0f;
-			axis.z = -from.z;
-		} else {
-			assert(false);
-		}
-		axis = Normalize(axis);
-	} else {
-		axis = Normalize(cross);
-	}
-
-	Matrix4x4 result = {
-
-	    axis.x * axis.x * (1 - cos) + cos,
-	    axis.x * axis.y * (1 - cos) + axis.z * sin,
-	    axis.x * axis.z * (1 - cos) - axis.y * sin,
-	    0,
-	    axis.x * axis.y * (1 - cos) - axis.z * sin,
-	    axis.y * axis.y * (1 - cos) + cos,
-	    axis.y * axis.z * (1 - cos) + axis.x * sin,
-	    0,
-	    axis.x * axis.z * (1 - cos) + axis.y * sin,
-	    axis.y * axis.z * (1 - cos) - axis.x * sin,
-	    axis.z * axis.z * (1 - cos) + cos,
-	    0,
-	    0,
-	    0,
-	    0,
-	    1};
-
-	return result;
 }

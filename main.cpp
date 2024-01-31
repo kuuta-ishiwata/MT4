@@ -14,15 +14,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Quaternion p1 = {2.0f, 3.0f, 4.0f, 1.0f};
-	Quaternion p2 = {1.0f, 3.0f, 5.0f, 2.0f};
-	Quaternion identity = IdentituQuaternion();
-	Quaternion conj = Conjugate(p1);
-	Quaternion inv = Inverse(p1);
-	Quaternion normal = Normalize(p1);
-	Quaternion mul1 = Multiply(p1, p2);
-	Quaternion mul2 = Multiply(p2, p1);
-	float norm = Norm(p1);
+	Quaternion rotation =
+	    MakeRotateAxisAngleQuaternion(Normalize(Vector3{1.0f, 0.4f, -0.2f}), 0.45f);
+	Vector3 pointY = {2.1f, -0.9f, 1.3f};
+	Matrix4x4 rotateMatrix = MakeRotateMatrix(rotation);
+	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
+	Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -45,16 +43,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		
-		//ImGuiで描画
-	    ImGui::Begin("Quaternion");
-		ImGui::Text( "Identity: %.2f  %.2f  %.2f  %.2f", identity.x, identity.y, identity.z,identity.w);
-		ImGui::Text("Conjugate: %.2f  %.2f  %.2f  %.2f", conj.x, conj.y, conj.z, conj.w);
-		ImGui::Text("Inverse: %.2f  %.2f  %.2f  %.2f", inv.x, inv.y, inv.z, inv.w);
-		ImGui::Text("Normalize: %.2f  %.2f  %.2f  %.2f", normal.x, normal.y, normal.z, normal.w);
-		ImGui::Text("Multiply(q1, q2) : %.2f  %.2f  %.2f  %.2f", mul1.x, mul1.y, mul1.z, mul1.w);
-		ImGui::Text("Multiply(q2, q1) : %.2f  %.2f  %.2f  %.2f", mul2.x, mul2.y, mul2.z, mul2.w);
-		ImGui::Text("Norm:%.2f", norm);
-		ImGui::End();
+		QuaternionScreenPrintf(0, kRowHeight * 0, rotation, "   : rotation");
+		MatrixScreenPrintf(0, kRowHeight * 2, rotateMatrix, "rotateMatrix");
+		VectorScreenPrintf(0, kRowHeight * 6, rotateByQuaternion, "   : rotateByQuaternion");
+		VectorScreenPrintf(0, kRowHeight * 7, rotateByMatrix, "   : rotateByMatrix");
+
 
 		/// ↑描画処理ここまで
 		///
